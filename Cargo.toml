@@ -7,4 +7,4 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/cybergeek94/const-cstr"
 
 [dependencies]
-libc = "0.1"
+libc = "^0.2"
