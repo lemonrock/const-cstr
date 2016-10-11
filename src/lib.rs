@@ -103,9 +103,9 @@ impl ConstCStr {
     pub fn as_ptr(&self) -> *const libc::c_char {
         let bytes = self.val.as_bytes();
 
-        assert_eq!(bytes[bytes.len() - 1], b'\0');
+        debug_assert_eq!(bytes[bytes.len() - 1], b'\0');
 
-        self.val.as_bytes().as_ptr() as *const libc::c_char
+        bytes.as_ptr() as *const libc::c_char
     }
 
     /// Returns the wrapped string as an `&'static CStr`, skipping the length check that
@@ -118,7 +118,7 @@ impl ConstCStr {
     pub fn as_cstr(&self) -> &'static CStr {
         let bytes = self.val.as_bytes();
 
-        assert_eq!(bytes[bytes.len() - 1], b'\0');
+        debug_assert_eq!(bytes[bytes.len() - 1], b'\0');
 
         // This check is safe because of the above assert.
         // Interior nuls are more of a logic error than a memory saftey issue.
