@@ -51,16 +51,25 @@
 //! Hello, world!
 //! Goodnight, sun!
 //! ```
+
+#![allow(non_snake_case)]
+
 extern crate libc;
 
 use std::ffi::CStr;
 
-/// A type representing a static C-compatible string, wrapping `&'static str`.
+pub trait ToPointerCString
+{
+	#[inline(always)]
+	fn to_ptr(&self) -> *const ::libc::c_char;
+}
+
+/// A type representing a static C-compatible string.
 ///
 /// Note
 /// ----
-/// Prefer the `const_cstr!` macro to create an instance of this struct 
-/// over manual initialization. The macro will include the NUL byte for you.
+/// Use ONLY the `const_cstr!` macro to create an instance of this struct.
+/// The macro will include the NUL byte for you.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ConstCStr {
     /// The wrapped string value. Not intended to be used for manual initialization.
@@ -68,7 +77,28 @@ pub struct ConstCStr {
     ///
     /// Includes the NUL terminating byte. Use `to_str()` to get an `&'static str`
     /// without the NUL terminating byte.
-    pub val: &'static str,
+    pub cValue: &'static str,
+	
+	/// Excludes the terminating byte
+	pub rustValue: &'static str,
+}
+
+impl ToPointerCString for ConstCStr
+{
+	#[inline(always)]
+	fn to_ptr(&self) -> *const ::libc::c_char
+	{
+		self.as_ptr()
+	}
+}
+
+impl ToPointerCString for CStr
+{	
+	#[inline(always)]
+	fn to_ptr(&self) -> *const ::libc::c_char
+	{
+		self.as_ptr() as *const ::libc::c_char
+	}
 }
 
 impl ConstCStr {
@@ -76,18 +106,21 @@ impl ConstCStr {
     ///
     /// Compare to `CStr::to_str()` which checks that the string is valid UTF-8 first,
     /// since it starts from an arbitrary pointer instead of a Rust string slice.
+	#[inline(always)]
     pub fn to_str(&self) -> &'static str {
-        &self.val[..self.val.len() - 1]
+        self.rustValue
     }
 
     /// Returns the wrapped string as a byte slice, **without** the NUL terminating byte.
+	#[inline(always)]
     pub fn to_bytes(&self) -> &'static [u8] {
-        self.to_str().as_bytes()
+        self.rustValue.as_bytes()
     }
 
     /// Returns the wrapped string as a byte slice, *with** the NUL terminating byte.
+	#[inline(always)]
     pub fn to_bytes_with_nul(&self) -> &'static [u8] {
-        self.val.as_bytes()
+        self.cValue.as_bytes()
     }
 
     /// Returns a pointer to the beginning of the wrapped string.
@@ -95,35 +128,17 @@ impl ConstCStr {
     /// Suitable for passing to any function that expects a C-compatible string. 
     /// Since the underlying string is guaranteed to be `'static`, 
     /// the pointer should always be valid.
-    ///
-    /// Panics
-    /// ------
-    /// If the wrapped string is not NUL-terminated. 
-    /// (Unlikely if you used the `const_cstr!` macro. This is just a sanity check.)
+	#[inline(always)]
     pub fn as_ptr(&self) -> *const libc::c_char {
-        let bytes = self.val.as_bytes();
-
-        debug_assert_eq!(bytes[bytes.len() - 1], b'\0');
-
-        bytes.as_ptr() as *const libc::c_char
+		self.cValue.as_ptr() as *const libc::c_char
     }
 
     /// Returns the wrapped string as an `&'static CStr`, skipping the length check that
     /// `CStr::from_ptr()` performs (since we know the length already).
-    ///
-    /// Panics
-    /// ------
-    /// If the wrapped string is not NUL-terminated. 
-    /// (Unlikely if you used the `const_cstr!` macro. This is just a sanity check.)
+	#[inline(always)]
     pub fn as_cstr(&self) -> &'static CStr {
-        let bytes = self.val.as_bytes();
-
-        debug_assert_eq!(bytes[bytes.len() - 1], b'\0');
-
-        // This check is safe because of the above assert.
-        // Interior nuls are more of a logic error than a memory saftey issue.
         unsafe {
-            CStr::from_bytes_with_nul_unchecked(bytes)
+            CStr::from_ptr(self.cValue.as_ptr() as *const i8)
         }
     }
 }
@@ -143,7 +158,11 @@ impl ConstCStr {
 #[macro_export]
 macro_rules! const_cstr {
     ($strval:expr) => (
-        $crate::ConstCStr { val: concat!($strval, "\0") }
+        $crate::ConstCStr
+		{
+			rustValue: $strval,
+			cValue: concat!($strval, "\0")
+		}
     );
     ($($strname:ident = $strval:expr);+;) => (
         $(
