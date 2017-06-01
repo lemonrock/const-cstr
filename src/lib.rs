@@ -1,4 +1,5 @@
 // Copyright (c) 2015 const-cstr developers
+// Copyright (c) 2017 const-cstr-fork developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -12,7 +13,7 @@
 //! -------
 //!
 //! ```rust
-//! #[macro_use] extern crate const_cstr;
+//! #[macro_use] extern crate const_cstr_fork;
 //! // Just for the `libc::c_char` type alias.
 //! extern crate libc;
 //!     

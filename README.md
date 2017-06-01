@@ -1,4 +1,6 @@
-# `const-cstr` [![](https://img.shields.io/crates/v/const-cstr.svg)](https://crates.io/crates/const-cstr)
+# `const-cstr-fork` [![](https://img.shields.io/crates/v/const-cstr-fork.svg)](https://crates.io/crates/const-cstr-fork)
+___This crate has been forked from [const-str](https://github.com/abonander/const-cstr) to try to optimise performance in some scenarios. It may disappear or be merged back into const-cstr. Many thanks are due to constr-str's author for the original design.___
+
 Create static C-compatible strings from Rust string literals.
 
 Usage
@@ -6,18 +8,18 @@ Usage
 Cargo.toml:
 ```toml
 [dependencies]
-const-cstr = "0.1"
+const-cstr-fork = "0.1"
 ```
 
 Crate root:
 ```rust
-#[macro_use] extern crate const_cstr;
+#[macro_use] extern crate const_cstr_fork;
 ```
 
 Example
 -------
 ```rust
- #[macro_use] extern crate const_cstr;
+ #[macro_use] extern crate const_cstr_fork;
  // Just for the `libc::c_char` type alias.
  extern crate libc;
      
